@@ -18,3 +18,7 @@ click>=8.0.0
 numpy>=1.20.0
 torch>=1.10.0
 tqdm>=4.62.0
+
+# Excel file support
+pandas>=2.0.0
+openpyxl>=3.1.0

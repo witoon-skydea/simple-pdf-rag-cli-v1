@@ -3,6 +3,7 @@ Document loader module for RAG system with OCR support
 """
 import os
 import tempfile
+import pandas as pd
 from typing import List, Set, Optional, Dict, Any, Union
 from pathlib import Path
 from langchain_community.document_loaders import TextLoader, PyPDFLoader, Docx2txtLoader
@@ -18,7 +19,7 @@ logging.basicConfig(level=logging.INFO,
 logger = logging.getLogger(__name__)
 
 # Supported file extensions
-SUPPORTED_EXTENSIONS = {'.pdf', '.docx', '.txt', '.md', '.csv'}
+SUPPORTED_EXTENSIONS = {'.pdf', '.docx', '.txt', '.md', '.csv', '.xlsx'}
 
 def is_supported_file(file_path: str) -> bool:
     """
@@ -110,6 +111,35 @@ def needs_ocr(pdf_path: str) -> bool:
         logger.warning(f"Error checking if PDF needs OCR: {e}. Assuming regular PDF.")
         return False
 
+def convert_xlsx_to_csv(xlsx_path: str) -> str:
+    """
+    Convert an Excel (XLSX) file to CSV format
+    
+    Args:
+        xlsx_path: Path to the Excel file
+        
+    Returns:
+        Path to the temporary CSV file
+    """
+    try:
+        logger.info(f"Converting Excel file {xlsx_path} to CSV")
+        
+        # Read the Excel file with pandas
+        df = pd.read_excel(xlsx_path)
+        
+        # Create a temporary file for the CSV output
+        with tempfile.NamedTemporaryFile(suffix='.csv', delete=False) as temp_file:
+            temp_csv_path = temp_file.name
+        
+        # Write the dataframe to CSV
+        df.to_csv(temp_csv_path, index=False)
+        logger.info(f"Converted Excel file to CSV: {temp_csv_path}")
+        
+        return temp_csv_path
+    except Exception as e:
+        logger.error(f"Error converting Excel file to CSV: {e}")
+        raise
+
 def load_document(file_path: str, ocr_enabled: bool = False, ocr_options: Optional[Dict[str, Any]] = None) -> List:
     """
     Load a document from a file path and split it into chunks
@@ -133,8 +163,26 @@ def load_document(file_path: str, ocr_enabled: bool = False, ocr_options: Option
             'use_gpu': True
         }
     
+    # Process XLSX files - convert to CSV first
+    if file_extension.lower() == '.xlsx':
+        try:
+            # Convert XLSX to CSV
+            temp_csv_path = convert_xlsx_to_csv(file_path)
+            
+            # Load the CSV file
+            loader = TextLoader(temp_csv_path)
+            documents = loader.load()
+            
+            # Clean up temporary file
+            os.unlink(temp_csv_path)
+            
+            logger.info(f"Loaded Excel file {file_path} as CSV")
+        except Exception as e:
+            logger.error(f"Failed to process Excel file: {e}")
+            raise
+    
     # Process PDF files
-    if file_extension.lower() == '.pdf':
+    elif file_extension.lower() == '.pdf':
         # Check if PDF needs OCR and OCR is enabled
         if ocr_enabled and needs_ocr(file_path):
             logger.info(f"PDF appears to contain images or scanned content. Using OCR.")

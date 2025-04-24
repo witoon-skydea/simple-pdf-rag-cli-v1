@@ -1,10 +1,10 @@
 # Simple PDF RAG CLI
 
-A command-line tool for PDF and document Q&A with OCR capabilities. This project combines PDF OCR capabilities with RAG (Retrieval Augmented Generation) to enable question answering on documents, including PDFs with images.
+A command-line tool for PDF and document Q&A with OCR capabilities. This project combines PDF OCR capabilities with RAG (Retrieval Augmented Generation) to enable question answering on documents, including PDFs with images and Excel files.
 
 ## Features
 
-- **Document Ingestion**: Import TXT, PDF, DOCX, CSV, and MD files into a vector database
+- **Document Ingestion**: Import TXT, PDF, DOCX, CSV, XLSX, and MD files into a vector database
 - **OCR for PDFs**: Process PDFs containing images or scanned content using OCR
 - **Multiple OCR Engines**: Support for Tesseract OCR and EasyOCR
 - **Multilingual OCR**: Support for multiple languages including Thai, English, and others
